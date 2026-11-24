@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Present Simple vs. Present Continuous – Interaktives Brettspiel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,400;0,700;1,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --board-bg: #fdfdfb;
+      --ink-color: #1c1917;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    .comic-font {
+      font-family: 'Comic Neue', cursive, sans-serif;
+    }
+
+    /* Color Mode vs Classic Black & White Worksheet Mode */
+    .bw-mode .cartoon-svg {
+      filter: grayscale(100%) contrast(125%);
+    }
+
+    .color-mode .cartoon-svg {
+      filter: none;
+    }
+
+    /* Paper Texture Effect */
+    .worksheet-paper {
+      background-color: #ffffff;
+      background-image: radial-gradient(#e2e8f0 0.75px, transparent 0.75px);
+      background-size: 20px 20px;
+      box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.08);
+    }
+
+    /* 3D Dice Styling */
+    .dice-scene {
+      width: 64px;
+      height: 64px;
+      perspective: 400px;
+    }
+
+    .dice-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .dice-face {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(145deg, #fffbeb, #f5e6c8);
+      border: 2px solid #78350f;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 8px;
+      box-shadow: inset 0 0 8px rgba(120, 53, 15, 0.2);
+    }
+
+    .pip {
+      width: 11px;
+      height: 11px;
+      background-color: #1c1917;
+      border-radius: 50%;
+      align-self: center;
+      justify-self: center;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.4);
+    }
+
+    .pip.red {
+      background-color: #dc2626;
+    }
+
+    .face-1 { transform: rotateY(0deg) translateZ(32px); }
+    .face-2 { transform: rotateY(90deg) translateZ(32px); }
+    .face-3 { transform: rotateY(180deg) translateZ(32px); }
+    .face-4 { transform: rotateY(-90deg) translateZ(32px); }
+    .face-5 { transform: rotateX(90deg) translateZ(32px); }
+    .face-6 { transform: rotateX(-90deg) translateZ(32px); }
+
+    @keyframes diceBounce {
+      0%, 100% { transform: scale(1); }
+      40% { transform: scale(1.22) translateY(-10px); }
+      70% { transform: scale(0.95) translateY(2px); }
+    }
+
+    .dice-rolling {
+      animation: diceBounce 0.85s ease;
+    }
+
+    /* Pawn Glow & Hop Animation */
+    @keyframes pawnHop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-9px) scale(1.12); }
+    }
+
+    .pawn-active {
+      animation: pawnHop 0.4s ease;
+    }
+
+    .tile-cell {
+      transition: background-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .tile-cell:hover {
+      background-color: #fefce8;
+    }
+
+    .tile-highlight {
+      background-color: #fef9c3 !important;
+      box-shadow: inset 0 0 0 3px #eab308;
+    }
+
+    /* Print Styling for 1:1 Worksheet Output */
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+      .worksheet-paper {
+        box-shadow: none !important;
+        background-image: none !important;
+        border: none !important;
+        padding: 8mm !important;
+      }
+      .pawn-container {
+        display: none !important;
+      }
+      .tile-cell {
+        break-inside: avoid;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
+    }
+  </style>
+</head>
+<body class="bw-mode min-h-screen flex flex-col">
+
+  <!-- Top Control Bar (Hidden when printing) -->
+  <header class="no-print sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand / Title -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow">
+          🎲
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-slate-900 leading-tight">
+            Present Simple vs. Present Continuous
+          </h1>
+          <p class="text-xs text-slate-500 hidden sm:block">Interaktives Englisches Lern-Brettspiel</p>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Player Count Selector -->
+        <div class="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+          <span class="text-xs font-semibold text-slate-600 px-2">Spieler:</span>
+          <button onclick="setPlayerCount(2)" id="btn-p2" class="player-cnt-btn px-2.5 py-1 text-xs font-bold rounded-lg transition bg-slate-900 text-white">2</button>
+          <button onclick="setPlayerCount(3)" id="btn-p3" class="player-cnt-btn px-2.5 py-1 text-xs font-bold rounded-lg transition text-slate-700 hover:bg-slate-200">3</button>
+          <button onclick="setPlayerCount(4)" id="btn-p4" class="player-cnt-btn px-2.5 py-1 text-xs font-bold rounded-lg transition text-slate-700 hover:bg-slate-200">4</button>
+        </div>
+
+        <!-- Style Toggle: Classic Worksheet B&W vs Comic Color -->
+        <button onclick="toggleColorMode()" id="btn-style-toggle" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition shadow-sm" title="Zwischen klassischem Schwarz-Weiß-Arbeitsblatt und farbigen Comics wechseln">
+          <span id="style-icon">🖍️</span>
+          <span id="style-label">Comic-Farbe</span>
+        </button>
+
+        <!-- Rules Button -->
+        <button onclick="openRulesModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition shadow-sm">
+          <span>📖</span>
+          <span class="hidden md:inline">Regeln</span>
+        </button>
+
+        <!-- Print Button -->
+        <button onclick="window.print()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition shadow-sm" title="1:1 als Arbeitsblatt drucken oder als PDF speichern">
+          <span>🖨️</span>
+          <span class="hidden sm:inline">Drucken / PDF</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button onclick="resetGame()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition">
+          <span>↺</span>
+          <span class="hidden md:inline">Neustart</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 py-4 sm:py-6 flex flex-col lg:flex-row gap-6 items-start">
+
+    <!-- Left / Top Game Dashboard (Hidden in Print) -->
+    <aside class="no-print w-full lg:w-80 shrink-0 flex flex-col gap-4">
+      <!-- Active Turn & 3D Dice Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Aktueller Zug</span>
+          <span id="turn-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+            Spieler 1 (Rot)
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between gap-4 bg-slate-50 rounded-xl p-3 border border-slate-200/80">
+          <!-- 3D Dice Container -->
+          <div class="dice-scene cursor-pointer" onclick="rollDice()" title="Klicken zum Würfeln">
+            <div id="dice-cube" class="dice-cube">
+              <!-- Face 1 -->
+              <div class="dice-face face-1">
+                <div></div><div></div><div></div>
+                <div></div><div class="pip red"></div><div></div>
+                <div></div><div></div><div></div>
+              </div>
+              <!-- Face 2 -->
+              <div class="dice-face face-2">
+                <div class="pip"></div><div></div><div></div>
+                <div></div><div></div><div></div>
+                <div></div><div></div><div class="pip"></div>
+              </div>
+              <!-- Face 3 -->
+              <div class="dice-face face-3">
+                <div class="pip"></div><div></div><div></div>
+                <div></div><div class="pip"></div><div></div>
+                <div></div><div></div><div class="pip"></div>
+              </div>
+              <!-- Face 4 -->
+              <div class="dice-face face-4">
+                <div class="pip"></div><div></div><div class="pip"></div>
+                <div></div><div></div><div></div>
+                <div class="pip"></div><div></div><div class="pip"></div>
+              </div>
+              <!-- Face 5 -->
+              <div class="dice-face face-5">
+                <div class="pip"></div><div></div><div class="pip"></div>
+                <div></div><div class="pip"></div><div></div>
+                <div class="pip"></div><div></div><div class="pip"></div>
+              </div>
+              <!-- Face 6 -->
+              <div class="dice-face face-6">
+                <div class="pip"></div><div></div><div class="pip"></div>
+                <div class="pip"></div><div></div><div class="pip"></div>
+                <div class="pip"></div><div></div><div class="pip"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col items-end">
+            <button id="roll-btn" onclick="rollDice()" class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+              <span>🎲 Würfeln</span>
+            </button>
+            <p id="status-text" class="text-xs text-slate-500 mt-1.5 text-right">
+              Klicke auf Würfeln, um zu starten!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Players Scoreboard / Positions -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Spielfiguren & Position</h2>
+          <span class="text-[11px] text-slate-400">Ziel: Feld 24</span>
+        </div>
+        <div id="players-list" class="space-y-2">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Quick Tip Box -->
+      <div class="bg-amber-50/90 rounded-2xl border border-amber-200/80 p-3.5 text-xs text-amber-950 space-y-1.5">
+        <div class="font-bold flex items-center gap-1.5 text-amber-900">
+          <span>💡</span> Tipp für den Unterricht / das Spielen
+        </div>
+        <p class="leading-relaxed text-amber-900/90">
+          Du kannst jederzeit auf <strong>jedes Spielfeld direkt klicken</strong>, um die Frage groß anzuzeigen, die Grammatik-Regel einzublenden oder eine Musterantwort zu prüfen!
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Board Area (5x5 Serpentine Grid) -->
+    <section class="print-container flex-1 w-full">
+      <div class="worksheet-paper rounded-2xl p-3 sm:p-6 md:p-8 mx-auto max-w-4xl border border-slate-300 relative">
+        
+        <!-- Subtle Worksheet Header -->
+        <div class="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-slate-200">
+          <div>
+            <h2 class="comic-font font-bold text-lg sm:text-2xl text-slate-900 tracking-wide">
+              Present Simple vs. Present Continuous
+            </h2>
+            <p class="text-[11px] sm:text-xs text-slate-500">
+              Board Game – Answer the questions in full sentences!
+            </p>
+          </div>
+          <div class="text-right text-[11px] text-slate-400 font-medium hidden sm:block">
+            Start → Finish (24 Fields)
+          </div>
+        </div>
+
+        <!-- 5x5 Board Grid -->
+        <div id="board-grid" class="grid grid-cols-5 border-t-2 border-l-2 border-slate-900 bg-white select-none">
+          <!-- 25 cells (5 rows x 5 columns) generated cleanly in exact visual positions -->
+        </div>
+
+        <!-- Footer Credit matching worksheet aesthetic -->
+        <div class="mt-2.5 flex items-center justify-between text-[10px] sm:text-xs text-slate-400">
+          <span>🎲 Klicke auf ein Feld für die Großansicht & Musterlösung</span>
+          <span class="font-mono tracking-tight">ESL Board Game Edition</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Question & Cartoon Card Modal -->
+  <div id="question-modal" class="no-print fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full border-2 border-slate-900 shadow-2xl overflow-hidden transform transition-all">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span id="modal-field-badge" class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-xs">
+            Feld 1
+          </span>
+          <span id="modal-player-tag" class="text-xs font-semibold text-slate-300">
+            Frage & Aufgabe
+          </span>
+        </div>
+        <button onclick="closeQuestionModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="p-5 sm:p-6 space-y-4">
+        <!-- Question Text -->
+        <div class="text-center">
+          <h3 id="modal-question" class="comic-font font-bold text-2xl sm:text-3xl text-slate-900 leading-snug">
+            Talk about your daily routines:
+          </h3>
+        </div>
+
+        <!-- Enlarged Cartoon Illustration -->
+        <div class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-4 flex items-center justify-center h-48 sm:h-56">
+          <div id="modal-illustration" class="w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center">
+            <!-- SVG injected here -->
+          </div>
+        </div>
+
+        <!-- Grammar & Sample Answer Accordion -->
+        <div class="space-y-2.5">
+          <div class="flex flex-wrap gap-2 justify-center">
+            <button onclick="toggleHint('grammar')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 transition cursor-pointer flex items-center gap-1.5">
+              <span>📘</span> Grammatik-Tipp anzeigen
+            </button>
+            <button onclick="toggleHint('sample')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition cursor-pointer flex items-center gap-1.5">
+              <span>💬</span> Beispielantwort aufklappen
+            </button>
+          </div>
+
+          <div id="hint-grammar" class="hidden rounded-xl bg-indigo-50/80 border border-indigo-200 p-3 text-xs text-indigo-950 leading-relaxed">
+            <!-- Grammar hint text -->
+          </div>
+
+          <div id="hint-sample" class="hidden rounded-xl bg-emerald-50/80 border border-emerald-200 p-3 text-xs text-emerald-950 leading-relaxed">
+            <!-- Sample answer text -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+        <span class="text-xs text-slate-500">Frage beantwortet?</span>
+        <button onclick="closeQuestionModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow transition cursor-pointer">
+          Weiter spielen →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Winner Celebration Modal -->
+  <div id="winner-modal" class="no-print fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full border-2 border-slate-900 shadow-2xl p-6 text-center space-y-4">
+      <div class="text-5xl">🏆🎉</div>
+      <h2 class="comic-font font-bold text-3xl text-slate-900">FINISH erreicht!</h2>
+      <p id="winner-text" class="text-base font-semibold text-slate-700">
+        Spieler 1 (Rot) hat das Ziel erreicht und gewonnen!
+      </p>
+      <div class="pt-2 flex justify-center gap-3">
+        <button onclick="closeWinnerModal()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 cursor-pointer">
+          Brett ansehen
+        </button>
+        <button onclick="resetGame(); closeWinnerModal();" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 shadow cursor-pointer">
+          Neues Spiel starten
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="no-print fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full border-2 border-slate-900 shadow-2xl overflow-hidden">
+      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <h3 class="font-bold text-base">📖 Spielregeln & Grammatik-Übersicht</h3>
+        <button onclick="closeRulesModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-sm text-slate-700 leading-relaxed">
+        <p><strong>1. Spielablauf:</strong> Wählt 2 bis 4 Spieler (Rot, Gelb, Blau, Grün). Würfelt reihum und zieht den Schlangenlinien-Pfeilen entlang von <strong>START</strong> bis <strong>FINISH</strong>.</p>
+        <p><strong>2. Frage beantworten:</strong> Landest du auf einem Feld, lies die englische Frage laut vor und beantworte sie in ganzen Sätzen.</p>
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-1.5 text-xs">
+          <p class="font-bold text-slate-900">🕒 Wann benutzt man welche Zeitform?</p>
+          <p><strong class="text-indigo-700">Present Simple</strong> (<em>I go, he works, do you...?</em>): Für Gewohnheiten, Routinen, Jahreszeiten und regelmäßige Handlungen (Signalwörter: <em>usually, every day, often, never, in summer</em>).</p>
+          <p><strong class="text-emerald-700">Present Continuous</strong> (<em>I am doing, he is running, is she...?</em>): Für Handlungen, die <strong>jetzt gerade</strong> im Moment passieren (Signalwörter: <em>now, at the moment</em>).</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 text-right">
+        <button onclick="closeRulesModal()" class="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs cursor-pointer">Verstanden</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CUSTOM HAND-DRAWN COMIC STYLE SVG ILLUSTRATIONS FOR EVERY SINGLE FIELD
+    // =========================================================================
+    const CARTOONS = {
+      // Field 1: Man sitting at table eating cereal / breakfast
+      1: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Clock on wall -->
+            <circle cx="96" cy="20" r="10" fill="#fef08a"/>
+            <path d="M96 14v6l4 2"/>
+            <!-- Chair back -->
+            <path d="M22 45v45M22 65h16" stroke-width="2.6"/>
+            <!-- Person body & head -->
+            <path d="M34 88v-24c0-6 5-10 12-10h6c5 0 9 4 9 10v14" fill="#93c5fd"/>
+            <circle cx="46" cy="36" r="11" fill="#fde68a"/>
+            <!-- Messy morning hair -->
+            <path d="M36 30c-3-5 2-9 6-6 2-5 9-5 10 0 4-3 8 2 5 6"/>
+            <!-- Eyes & big smile -->
+            <circle cx="49" cy="34" r="1.3" fill="#1c1917"/>
+            <path d="M46 40c2 2 5 2 7 0"/>
+            <!-- Spoon & Arm -->
+            <path d="M44 58l14 4 6-7"/>
+            <ellipse cx="66" cy="53" rx="3.5" ry="2" fill="#e2e8f0"/>
+            <!-- Table -->
+            <path d="M48 74h56M62 74v18M96 74v18" stroke-width="2.6"/>
+            <!-- Cereal Bowl & Milk/Box -->
+            <path d="M62 67h16c0 5-3.5 7-8 7s-8-2-8-7z" fill="#fca5a5"/>
+            <rect x="84" y="54" width="11" height="20" rx="1" fill="#fdba74"/>
+            <path d="M87 60h5"/>
+          </svg>`,
+
+      // Field 2: Man sleeping at desk next to books/papers (or walking dog/snoozing - matching prompt: sleeping at desk next to books/papers)
+      2: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Zzz sleeping signs -->
+            <path d="M58 18h8l-8 8h8" stroke-width="2"/>
+            <path d="M72 10h6l-6 6h6" stroke-width="1.8"/>
+            <!-- Desk -->
+            <path d="M14 72h92M24 72v20M96 72v20" stroke-width="2.6"/>
+            <!-- Sleeping Man resting head on arms -->
+            <path d="M32 72c0-14 10-20 22-20 10 0 18 6 20 16" fill="#a7f3d0"/>
+            <circle cx="52" cy="58" r="11" fill="#fde68a"/>
+            <!-- Closed sleepy eyes & hair -->
+            <path d="M48 58c2 2 4 2 6 0M44 49c3-4 11-4 15 0"/>
+            <!-- Folded arms on desk -->
+            <ellipse cx="52" cy="69" rx="16" ry="4" fill="#fde68a"/>
+            <!-- Stack of books on right -->
+            <rect x="78" y="64" width="22" height="8" rx="1" fill="#93c5fd"/>
+            <rect x="80" y="56" width="20" height="8" rx="1" fill="#fca5a5"/>
+            <rect x="77" y="48" width="21" height="8" rx="1" fill="#fde047"/>
+            <!-- Desk Lamp -->
+            <path d="M22 72v-22l10-8"/>
+            <path d="M28 38l10 8-6 5z" fill="#fef08a"/>
+          </svg>`,
+
+      // Field 3: Woman relaxing on beach lounger under sun umbrella
+      3: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Sun -->
+            <circle cx="20" cy="20" r="8" fill="#fde047"/>
+            <path d="M20 7v3M20 30v3M7 20h3M30 20h3M11 11l2 2M27 27l2 2"/>
+            <!-- Beach Umbrella -->
+            <path d="M76 86l6-54" stroke-width="2.5"/>
+            <path d="M52 36c8-16 42-16 54 2-10-3-18-1-25 1-8-3-18-3-29-3z" fill="#f87171"/>
+            <!-- Beach Lounger -->
+            <path d="M24 64l18 16h44l8-8" stroke-width="2.6"/>
+            <path d="M38 80v10M78 80v10"/>
+            <!-- Relaxing Woman with sunglasses -->
+            <circle cx="38" cy="54" r="9" fill="#fde68a"/>
+            <path d="M31 50c-3 4-2 10 1 12M43 49c3 3 4 8 2 11" stroke-width="2.4"/>
+            <!-- Sunglasses -->
+            <rect x="35" y="52" width="5" height="3.5" fill="#1c1917"/>
+            <rect x="41" y="52" width="5" height="3.5" fill="#1c1917"/>
+            <!-- Body reclining -->
+            <path d="M44 61l22 14h22" stroke-width="5" stroke="#60a5fa"/>
+            <!-- Drink with straw -->
+            <path d="M94 74h8l-1 12h-6z" fill="#fef08a"/>
+            <path d="M99 74l3-6"/>
+            <!-- Sand wave -->
+            <path d="M10 90c25-3 70-3 100 0" stroke-width="1.8"/>
+          </svg>`,
+
+      // Field 4: Man running/hurrying with laptop under his arm
+      4: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Speed lines -->
+            <path d="M12 34h16M8 46h18M14 58h14" stroke-width="2"/>
+            <!-- Running Man -->
+            <circle cx="58" cy="24" r="10" fill="#fde68a"/>
+            <!-- Sweating / hurried face & flying hair -->
+            <path d="M47 20c-4-3-2-8 4-7 3-4 10-3 12 2"/>
+            <circle cx="62" cy="23" r="1.3" fill="#1c1917"/>
+            <ellipse cx="62" cy="29" rx="2.5" ry="2" fill="#fca5a5"/>
+            <!-- Torso leaning forward -->
+            <path d="M54 34l-8 26 18 4 8-24z" fill="#93c5fd"/>
+            <!-- Tie flying back -->
+            <path d="M56 38l-14 8 4 4 10-8" fill="#f87171"/>
+            <!-- Laptop tucked under arm -->
+            <path d="M56 46l24-4 3 14-24 4z" fill="#cbd5e1"/>
+            <path d="M50 44l14 6 12-4" stroke-width="2.6"/>
+            <!-- Running Legs -->
+            <path d="M48 60l-14 14-10-4" stroke-width="3.2"/>
+            <path d="M62 63l16 12 12-6" stroke-width="3.2"/>
+            <!-- Shoes -->
+            <ellipse cx="22" cy="70" rx="5" ry="3" fill="#1c1917"/>
+            <ellipse cx="92" cy="68" rx="5" ry="3" fill="#1c1917"/>
+          </svg>`,
+
+      // Field 5: Waitress / Woman serving a tray with drinks
+      5: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Waitress Head & Hat -->
+            <circle cx="52" cy="26" r="10" fill="#fde68a"/>
+            <path d="M45 17l7-5 7 5z" fill="#ffffff"/>
+            <path d="M41 24c-3 5-2 11 1 13"/>
+            <circle cx="56" cy="25" r="1.3" fill="#1c1917"/>
+            <path d="M53 30c2 2 4 2 6 0"/>
+            <!-- Dress & Apron -->
+            <path d="M44 37h16l6 34H38z" fill="#f472b6"/>
+            <path d="M44 48h16l3 20H41z" fill="#ffffff"/>
+            <!-- Legs -->
+            <path d="M46 71v18M58 71l6 17" stroke-width="2.6"/>
+            <!-- Arm holding tray high -->
+            <path d="M60 44l18-8v-6" stroke-width="2.6"/>
+            <!-- Serving Tray -->
+            <ellipse cx="82" cy="29" rx="22" ry="3.5" fill="#cbd5e1"/>
+            <!-- Glasses on tray -->
+            <path d="M70 28l-2-11h8l-2 11z" fill="#bae6fd"/>
+            <path d="M84 28l-1-13h6l-1 13z" fill="#fde047"/>
+            <circle cx="94" cy="24" r="4" fill="#fca5a5"/>
+          </svg>`,
+
+      // Field 6: Two people looking into a shop window with a "SALE" sign
+      6: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Shop Window Frame -->
+            <rect x="56" y="12" width="54" height="68" rx="2" fill="#e0f2fe"/>
+            <!-- SALE Banner inside window -->
+            <rect x="64" y="20" width="38" height="16" rx="2" fill="#fde047" transform="rotate(-4 83 28)"/>
+            <text x="83" y="32" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626" stroke="none" font-family="sans-serif">SALE</text>
+            <!-- Items in window -->
+            <path d="M74 54l6-8 6 8v14H74z" fill="#f472b6"/>
+            <circle cx="96" cy="60" r="6" fill="#a7f3d0"/>
+            <!-- Person 1 (left, pointing) -->
+            <circle cx="24" cy="34" r="9" fill="#fde68a"/>
+            <path d="M17 44h14l3 26H14z" fill="#93c5fd"/>
+            <path d="M30 48l18-6" stroke-width="2.4"/>
+            <path d="M20 70v18M28 70v18" stroke-width="2.4"/>
+            <!-- Person 2 (middle, looking closely) -->
+            <circle cx="44" cy="38" r="8.5" fill="#fde68a"/>
+            <path d="M37 47h13l2 23H35z" fill="#fdba74"/>
+            <path d="M40 70v18M47 70v18" stroke-width="2.4"/>
+          </svg>`,
+
+      // Field 7: Man pushing a shopping cart in the supermarket
+      7: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Man pushing cart -->
+            <circle cx="32" cy="24" r="9.5" fill="#fde68a"/>
+            <path d="M25 18c4-4 11-4 14 0"/>
+            <circle cx="36" cy="23" r="1.2" fill="#1c1917"/>
+            <path d="M33 28c2 1.5 4 1.5 5 0"/>
+            <path d="M24 35h15l3 28H22z" fill="#86efac"/>
+            <!-- Arms holding cart handle -->
+            <path d="M36 42l20 4" stroke-width="2.6"/>
+            <!-- Walking legs -->
+            <path d="M26 63l-6 24M36 63l8 24" stroke-width="2.8"/>
+            <!-- Shopping Cart -->
+            <path d="M52 40h6l6 28h32l8-22H60" fill="#e2e8f0"/>
+            <path d="M68 46v22M80 46v22M92 46v22M62 56h38" stroke-width="1.5"/>
+            <!-- Groceries sticking out -->
+            <rect x="66" y="34" width="9" height="12" fill="#fca5a5"/>
+            <circle cx="84" cy="39" r="6" fill="#fde047"/>
+            <path d="M94 46l4-14 4 2-3 12" fill="#4ade80"/>
+            <!-- Cart Wheels -->
+            <circle cx="66" cy="75" r="4.5" fill="#1c1917"/>
+            <circle cx="94" cy="75" r="4.5" fill="#1c1917"/>
+            <path d="M62 71h36"/>
+          </svg>`,
+
+      // Field 8: Man sitting at desk looking at calendar / clock
+      8: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Wall Calendar -->
+            <rect x="74" y="12" width="28" height="30" rx="2" fill="#ffffff"/>
+            <rect x="74" y="12" width="28" height="8" fill="#ef4444"/>
+            <path d="M80 26h16M80 32h16M80 38h10" stroke-width="1.6"/>
+            <!-- Desk -->
+            <path d="M16 74h88M26 74v18M94 74v18" stroke-width="2.6"/>
+            <!-- Man at desk -->
+            <circle cx="44" cy="36" r="10" fill="#fde68a"/>
+            <circle cx="48" cy="35" r="1.3" fill="#1c1917"/>
+            <path d="M45 41c2 1 4 1 5 0"/>
+            <path d="M33 48h22l3 26H30z" fill="#c4b5fd"/>
+            <!-- Pointing up towards calendar -->
+            <path d="M54 52l16-14" stroke-width="2.5"/>
+            <!-- Small Desk Clock -->
+            <circle cx="80" cy="65" r="8" fill="#fef08a"/>
+            <path d="M80 60v5l3 2"/>
+          </svg>`,
+
+      // Field 9: Man shoveling snow with a snow shovel
+      9: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Snowflakes -->
+            <path d="M22 18v8M18 22h8M92 14v8M88 18h8M64 12v6M61 15h6" stroke-width="1.6"/>
+            <!-- Man in winter hat & scarf -->
+            <circle cx="42" cy="30" r="9.5" fill="#fde68a"/>
+            <!-- Winter Beanie Hat -->
+            <path d="M32 27c1-8 19-8 20 0z" fill="#ef4444"/>
+            <circle cx="42" cy="18" r="3.5" fill="#ffffff"/>
+            <!-- Scarf -->
+            <rect x="34" y="38" width="16" height="5" rx="2" fill="#fde047"/>
+            <path d="M34 42l-6 12 5 2 4-11" fill="#fde047"/>
+            <!-- Winter Coat -->
+            <path d="M32 43h20l4 24H28z" fill="#60a5fa"/>
+            <path d="M34 67v20M48 67v20" stroke-width="3"/>
+            <!-- Arms holding snow shovel -->
+            <path d="M46 48l24 18" stroke-width="2.8"/>
+            <path d="M38 52l22 10"/>
+            <!-- Shovel Scoop & Snow Pile -->
+            <path d="M68 62l16 6-4 14-16-6z" fill="#cbd5e1"/>
+            <path d="M74 86c6-14 26-16 36 0z" fill="#f1f5f9"/>
+          </svg>`,
+
+      // Field 10: Man relaxing in a hammock between palm trees
+      10: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Left Palm Tree Trunk & Leaves -->
+            <path d="M14 90c2-24 4-46 2-68" stroke-width="4" stroke="#92400e"/>
+            <path d="M16 22c-10-4-14 2-12 8M16 22c6-8 16-6 18 2M16 22c10-2 16 4 14 10" stroke="#16a34a" stroke-width="2.5"/>
+            <!-- Right Palm Tree Trunk & Leaves -->
+            <path d="M106 90c-2-24-4-46-2-68" stroke-width="4" stroke="#92400e"/>
+            <path d="M104 22c-10-6-18-2-18 5M104 22c10-4 14 2 12 8" stroke="#16a34a" stroke-width="2.5"/>
+            <!-- Hammock -->
+            <path d="M16 42c24 34 64 34 88 0-24 22-64 22-88 0z" fill="#fde047"/>
+            <!-- Man lying in hammock -->
+            <circle cx="38" cy="48" r="8" fill="#fde68a"/>
+            <path d="M46 52c14 6 26 4 38-4" stroke-width="4.5" stroke="#60a5fa"/>
+            <path d="M84 48l8-6" stroke-width="3"/>
+          </svg>`,
+
+      // Field 11: Woman sitting in front of computer/monitor crying
+      11: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Desk -->
+            <path d="M14 74h92M24 74v18M96 74v18" stroke-width="2.6"/>
+            <!-- Computer Monitor -->
+            <rect x="66" y="34" width="32" height="24" rx="2" fill="#e2e8f0"/>
+            <path d="M82 58v16M72 74h20" stroke-width="2.5"/>
+            <!-- Crying Woman -->
+            <circle cx="38" cy="38" r="10" fill="#fde68a"/>
+            <path d="M29 34c-4 6-3 14 0 17M46 33c4 5 4 12 1 16"/>
+            <!-- Sad mouth & Big Tears -->
+            <path d="M36 44c2-2 4-2 6 0"/>
+            <path d="M42 38c4 4 6 10 4 14" stroke="#3b82f6" stroke-width="2"/>
+            <circle cx="50" cy="48" r="2" fill="#3b82f6" stroke="none"/>
+            <circle cx="53" cy="56" r="2" fill="#3b82f6" stroke="none"/>
+            <!-- Body -->
+            <path d="M28 50h18l3 24H25z" fill="#f9a8d4"/>
+          </svg>`,
+
+      // Field 12: Woman carrying a tall stack of books/files
+      12: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Woman walking -->
+            <circle cx="46" cy="24" r="9.5" fill="#fde68a"/>
+            <path d="M37 22c-3 5-2 11 1 13"/>
+            <circle cx="50" cy="23" r="1.2" fill="#1c1917"/>
+            <path d="M38 35h16l4 32H34z" fill="#a78bfa"/>
+            <!-- Walking Legs -->
+            <path d="M40 67l-6 22M50 67l8 22" stroke-width="2.6"/>
+            <!-- Tall Stack of Books/Files -->
+            <rect x="54" y="18" width="28" height="7" rx="1" fill="#fca5a5" transform="rotate(-4 68 21)"/>
+            <rect x="52" y="25" width="30" height="7" rx="1" fill="#fde047" transform="rotate(3 67 28)"/>
+            <rect x="55" y="32" width="28" height="7" rx="1" fill="#93c5fd" transform="rotate(-2 69 35)"/>
+            <rect x="53" y="39" width="30" height="7" rx="1" fill="#86efac"/>
+            <rect x="54" y="46" width="28" height="7" rx="1" fill="#fdba74"/>
+            <!-- Arms holding stack -->
+            <path d="M48 46h16" stroke-width="2.8"/>
+          </svg>`,
+
+      // Field 13: Furious woman with crossed arms and steam/anger lines
+      13: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Anger / Steam puffs -->
+            <path d="M34 16c-4-4 2-8 6-4M82 16c4-4-2-8-6-4" stroke="#ef4444" stroke-width="2.2"/>
+            <path d="M44 10l3 5M76 10l-3 5" stroke="#ef4444" stroke-width="2.2"/>
+            <!-- Furious Face -->
+            <circle cx="60" cy="30" r="12" fill="#fca5a5"/>
+            <!-- Wild spiky hair -->
+            <path d="M46 26l-6-6 8-2 2-7 7 4 6-5 4 6 8-1-3 7 6 4"/>
+            <!-- Angry V-eyebrows & gritted teeth -->
+            <path d="M53 26l5 3M67 26l-5 3" stroke-width="2.5"/>
+            <rect x="54" y="34" width="12" height="4" rx="1" fill="#ffffff"/>
+            <path d="M58 34v4M62 34v4" stroke-width="1.4"/>
+            <!-- Torso with crossed arms -->
+            <path d="M46 43h28l4 28H42z" fill="#f87171"/>
+            <path d="M44 52h32M48 58h24" stroke-width="2.8"/>
+            <!-- Stomping Legs -->
+            <path d="M50 71l-4 18M70 71l4 18" stroke-width="2.8"/>
+          </svg>`,
+
+      // Field 14: Man sitting at desk/laptop with coffee mug
+      14: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Desk -->
+            <path d="M14 74h92M24 74v18M96 74v18" stroke-width="2.6"/>
+            <!-- Man -->
+            <circle cx="40" cy="36" r="10" fill="#fde68a"/>
+            <circle cx="44" cy="35" r="1.3" fill="#1c1917"/>
+            <path d="M41 41c2 1.5 4 1.5 5 0"/>
+            <path d="M29 48h22l3 26H26z" fill="#60a5fa"/>
+            <!-- Laptop open on desk -->
+            <path d="M62 74h24l6-18H68z" fill="#cbd5e1"/>
+            <!-- Steaming Coffee Mug -->
+            <rect x="92" y="61" width="10" height="13" rx="1.5" fill="#fde047"/>
+            <path d="M102 64h3v6h-3"/>
+            <path d="M95 56c0-3 2-4 0-7M99 56c0-3 2-4 0-7" stroke-width="1.6"/>
+          </svg>`,
+
+      // Field 15: Man taking a shower under showerhead
+      15: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Shower Pipe & Head -->
+            <path d="M18 14h24l6 8" stroke-width="2.8"/>
+            <path d="M42 22l12-6 4 6-12 6z" fill="#cbd5e1"/>
+            <!-- Water Drops -->
+            <path d="M52 28l6 12M48 32l4 14M56 26l10 12M62 44l4 10M54 48l3 10" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="3 3"/>
+            <!-- Man washing hair with soap bubbles -->
+            <circle cx="74" cy="42" r="10" fill="#fde68a"/>
+            <!-- Soap foam bubbles on head -->
+            <circle cx="68" cy="32" r="4" fill="#ffffff"/>
+            <circle cx="75" cy="30" r="4.5" fill="#ffffff"/>
+            <circle cx="82" cy="33" r="3.5" fill="#ffffff"/>
+            <circle cx="71" cy="42" r="1.2" fill="#1c1917"/>
+            <path d="M70 47c2 2 4 2 6 0"/>
+            <!-- Arms raised scrubbing -->
+            <path d="M66 56l-8-14 6-6M82 56l8-14-6-6" stroke-width="2.5"/>
+            <!-- Shower Curtain / Tub edge at bottom -->
+            <path d="M56 68h36v20H56z" fill="#bae6fd"/>
+            <path d="M46 88h56" stroke-width="2.6"/>
+          </svg>`,
+
+      // Field 16: Frightened man sitting in armchair staring scared at TV
+      16: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- TV on left -->
+            <rect x="12" y="24" width="24" height="22" rx="2" fill="#1e293b"/>
+            <path d="M18 24l-4-8M28 24l5-8" stroke-width="1.8"/>
+            <path d="M18 46v28M30 46v28"/>
+            <!-- Scary ghost/face on TV screen -->
+            <circle cx="24" cy="35" r="5" fill="#fef08a" stroke="none"/>
+            <!-- Armchair -->
+            <path d="M58 46h36c4 0 6 3 6 7v27H54V53c0-4 2-7 4-7z" fill="#fca5a5"/>
+            <!-- Frightened Man jumping in fear -->
+            <circle cx="74" cy="32" r="10" fill="#fde68a"/>
+            <!-- Hair standing straight up! -->
+            <path d="M66 23l-3-8M71 21l-1-9M76 21l2-9M81 23l4-8" stroke-width="2"/>
+            <!-- Wide scared eyes & open mouth -->
+            <circle cx="70" cy="31" r="2.2" fill="#ffffff"/>
+            <circle cx="70" cy="31" r="0.8" fill="#1c1917"/>
+            <ellipse cx="72" cy="37" rx="3" ry="3.5" fill="#ef4444"/>
+            <!-- Hands gripping armrests -->
+            <path d="M64 46l-10 14h14" stroke-width="2.6"/>
+          </svg>`,
+
+      // Field 17: Man raking / collecting autumn leaves in a leaf pile
+      17: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Falling autumn leaves -->
+            <ellipse cx="26" cy="22" rx="4" ry="2" fill="#f97316" transform="rotate(25 26 22)"/>
+            <ellipse cx="92" cy="20" rx="4" ry="2" fill="#eab308" transform="rotate(-20 92 20)"/>
+            <!-- Man with rake -->
+            <circle cx="44" cy="28" r="9.5" fill="#fde68a"/>
+            <circle cx="48" cy="27" r="1.2" fill="#1c1917"/>
+            <path d="M45 32c2 1.5 4 1.5 5 0"/>
+            <path d="M35 39h18l3 26H32z" fill="#fdba74"/>
+            <path d="M38 65v22M50 65v22" stroke-width="2.8"/>
+            <!-- Rake handle & teeth -->
+            <path d="M38 48l42 32" stroke-width="2.4"/>
+            <path d="M74 84l12-8M76 80l3 6M80 78l3 6M84 76l3 6"/>
+            <!-- Big Pile of Autumn Leaves -->
+            <path d="M66 88c6-18 32-18 42 0z" fill="#f97316"/>
+            <path d="M74 86c4-10 18-10 24 0" stroke="#fde047" stroke-width="2"/>
+          </svg>`,
+
+      // Field 18: Dog chasing a cat / chaos with two pets
+      18: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Action lines -->
+            <path d="M12 44h12M10 54h14" stroke-width="2"/>
+            <!-- Chasing Dog (left) -->
+            <ellipse cx="38" cy="58" rx="14" ry="8" fill="#d97706"/>
+            <circle cx="48" cy="48" r="8" fill="#d97706"/>
+            <path d="M43 42l-4-6 7 2z" fill="#78350f"/>
+            <circle cx="51" cy="47" r="1.2" fill="#1c1917"/>
+            <!-- Barking mouth -->
+            <path d="M52 51h6l-3 4z" fill="#fca5a5"/>
+            <path d="M26 64l-6 12M46 64l8 12" stroke-width="2.5"/>
+            <!-- Fleeing Cat (right, arched back) -->
+            <path d="M74 58c6-10 16-10 22 0" stroke-width="6" stroke="#64748b"/>
+            <circle cx="96" cy="48" r="7" fill="#64748b"/>
+            <path d="M92 42l-1-6 4 4M99 42l3-6 1 6" fill="#64748b"/>
+            <circle cx="98" cy="47" r="1.2" fill="#fde047"/>
+            <!-- Puffed cat tail -->
+            <path d="M74 56c-6-10-4-18 2-20" stroke-width="3.5" stroke="#64748b"/>
+            <path d="M78 60l-4 14M94 60l6 14" stroke-width="2.4"/>
+          </svg>`,
+
+      // Field 19: Man sitting comfortably in armchair reading a newspaper
+      19: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Cozy Armchair -->
+            <path d="M22 44h44c4 0 6 3 6 7v30H18V51c0-4 2-7 4-7z" fill="#93c5fd"/>
+            <!-- Man's Head peeking over newspaper -->
+            <circle cx="44" cy="32" r="9.5" fill="#fde68a"/>
+            <circle cx="47" cy="31" r="1.2" fill="#1c1917"/>
+            <!-- Crossed relaxed legs -->
+            <path d="M48 72l26-6 6 12" stroke-width="3"/>
+            <!-- Open Newspaper -->
+            <path d="M36 42l24-6 20 6v26l-20-6-24 6z" fill="#ffffff"/>
+            <path d="M60 36v26M42 47h12M42 53h12M66 47h10M66 53h10" stroke-width="1.5"/>
+          </svg>`,
+
+      // Field 20: Person skiing / snowboarding in the snow
+      20: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Snowy mountain slope -->
+            <path d="M10 62l100 28H10z" fill="#e2e8f0"/>
+            <!-- Skier -->
+            <circle cx="54" cy="28" r="9" fill="#fde68a"/>
+            <path d="M45 25c2-7 16-7 18 0z" fill="#f87171"/>
+            <!-- Ski goggles -->
+            <rect x="52" y="26" width="9" height="4" rx="1.5" fill="#38bdf8"/>
+            <path d="M46 38h16l4 20H44z" fill="#fde047"/>
+            <!-- Ski poles -->
+            <path d="M48 44l-18 14M60 44l-14 16" stroke-width="2"/>
+            <!-- Skis angled down the slope -->
+            <path d="M30 62l54 15c3 1 5-1 5-3" stroke-width="3.2" stroke="#dc2626"/>
+          </svg>`,
+
+      // Field 21: Person gardening / holding flowers and watering can
+      21: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Gardener -->
+            <circle cx="40" cy="28" r="9.5" fill="#fde68a"/>
+            <!-- Sun Hat -->
+            <ellipse cx="40" cy="21" rx="16" ry="3.5" fill="#fde047"/>
+            <path d="M32 21c1-6 15-6 16 0z" fill="#fde047"/>
+            <circle cx="44" cy="27" r="1.2" fill="#1c1917"/>
+            <path d="M41 32c2 1.5 4 1.5 5 0"/>
+            <path d="M31 39h18l3 26H28z" fill="#86efac"/>
+            <path d="M35 65v22M46 65v22" stroke-width="2.8"/>
+            <!-- Watering Can -->
+            <path d="M48 48l16 4" stroke-width="2.5"/>
+            <rect x="62" y="48" width="14" height="12" rx="2" fill="#60a5fa"/>
+            <path d="M76 56l10-6" stroke-width="2.4"/>
+            <!-- Water drops onto flowers -->
+            <path d="M88 54v10M92 56v10" stroke="#38bdf8" stroke-dasharray="2 2"/>
+            <!-- Blooming Spring Flowers -->
+            <path d="M86 88V72M96 88V70" stroke="#16a34a" stroke-width="2.2"/>
+            <circle cx="86" cy="70" r="5" fill="#f472b6"/>
+            <circle cx="96" cy="68" r="5" fill="#fde047"/>
+          </svg>`,
+
+      // Field 22: Two people riding on a wild roller coaster
+      22: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Roller coaster steep track -->
+            <path d="M12 44c26 0 54 18 96 44" stroke-width="3.5"/>
+            <path d="M24 46v42M48 54v34M72 66v22M94 80v8" stroke-width="1.8"/>
+            <!-- Coaster Car -->
+            <path d="M34 36l42 16-6 14-42-16z" fill="#f87171"/>
+            <!-- Person 1 with arms raised screaming in joy -->
+            <circle cx="46" cy="28" r="7.5" fill="#fde68a"/>
+            <path d="M40 28l-6-12M52 31l4-13" stroke-width="2.2"/>
+            <!-- Person 2 with arms raised -->
+            <circle cx="66" cy="36" r="7.5" fill="#fde68a"/>
+            <path d="M60 36l-4-12M72 39l6-12" stroke-width="2.2"/>
+          </svg>`,
+
+      // Field 23: Woman riding a motor scooter / moped
+      23: `<svg viewBox="0 0 120 100" class="cartoon-svg w-full h-full" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Speed lines -->
+            <path d="M10 42h14M8 54h16" stroke-width="2"/>
+            <!-- Woman with Helmet & Flowing Scarf -->
+            <circle cx="56" cy="24" r="9.5" fill="#fde68a"/>
+            <path d="M46 24c0-7 18-7 19 1H46z" fill="#f472b6"/>
+            <!-- Scarf blowing in wind -->
+            <path d="M48 34c-12 2-20-2-26 3 8 4 16 4 26 1" fill="#fde047"/>
+            <path d="M48 35h14l2 22H46z" fill="#93c5fd"/>
+            <!-- Arms holding handlebars -->
+            <path d="M58 40l18 2" stroke-width="2.5"/>
+            <!-- Scooter Body -->
+            <path d="M28 62c6-10 26-10 34 0h16l-4-22h6l6 28H28z" fill="#34d399"/>
+            <!-- Scooter Wheels -->
+            <circle cx="34" cy="74" r="9" fill="#334155"/>
+            <circle cx="34" cy="74" r="4" fill="#e2e8f0"/>
+            <circle cx="84" cy="74" r="9" fill="#334155"/>
+            <circle cx="84" cy="74" r="4" fill="#e2e8f0"/>
+          </svg>`
+    };
+
+    // =========================================================================
+    // 2. COMPLETE BOARD DATA (EXACT 5x5 SERPENTINE STRUCTURE FROM WORKSHEET)
+    // =========================================================================
+    const BOARD_TILES = [
+      // ROW 1 (Left -> Right)
+      {
+        id: 0, row: 0, col: 0, type: 'start',
+        title: 'START',
+        arrow: 'right'
+      },
+      {
+        id: 1, row: 0, col: 1, type: 'question',
+        text: 'Talk about your daily routines:',
+        grammar: '<strong>Present Simple:</strong> Benutze die Grundform (Infinitiv, bei <em>he/she/it</em> mit <strong>-s</strong>), um über tägliche Gewohnheiten zu sprechen.',
+        sample: 'I usually wake up at 7 o’clock, eat cereal for breakfast, and go to school by bus.'
+      },
+      {
+        id: 2, row: 0, col: 2, type: 'question',
+        text: 'What is the person doing?',
+        grammar: '<strong>Present Continuous:</strong> <em>am / is / are + Verb-ing</em> – beschreibt, was auf dem Bild <strong>gerade jetzt</strong> passiert.',
+        sample: 'He is sleeping at his desk next to a pile of books!'
+      },
+      {
+        id: 3, row: 0, col: 3, type: 'question',
+        text: 'What do you do in summer?',
+        grammar: '<strong>Present Simple:</strong> Regelmäßige Aktivitäten in einer Jahreszeit stehen im Present Simple.',
+        sample: 'In summer, I often go to the beach, swim in the sea, and eat ice cream.'
+      },
+      {
+        id: 4, row: 0, col: 4, type: 'question',
+        text: 'What is he doing?',
+        arrow: 'down',
+        grammar: '<strong>Present Continuous:</strong> <em>He is + Verb-ing</em> für eine laufende Handlung im Moment.',
+        sample: 'He is running very fast and carrying a laptop under his arm.'
+      },
+
+      // ROW 2 (Right -> Left: col 4 down to col 0)
+      {
+        id: 5, row: 1, col: 4, type: 'question',
+        text: 'What do your relatives do?',
+        grammar: '<strong>Present Simple:</strong> Nach Berufen oder regelmäßigen Tätigkeiten von Verwandten fragt man mit <em>do / does</em>.',
+        sample: 'My aunt works as a waitress in a café and serves drinks. My uncle is a teacher.'
+      },
+      {
+        id: 6, row: 1, col: 3, type: 'question',
+        text: 'What are they looking for?',
+        grammar: '<strong>Present Continuous:</strong> <em>They are + Verb-ing</em> – was suchen die beiden Personen gerade im Schaufenster?',
+        sample: 'They are looking for cheap clothes and special offers in the shop window.'
+      },
+      {
+        id: 7, row: 1, col: 2, type: 'question',
+        text: 'Is he doing the housework?',
+        grammar: '<strong>Present Continuous (Frage & Kurzantwort):</strong> <em>Yes, he is. / No, he isn’t. He is...</em>',
+        sample: 'No, he isn’t doing the housework. He is shopping in the supermarket and pushing a trolley.'
+      },
+      {
+        id: 8, row: 1, col: 1, type: 'question',
+        text: 'When do you usually go on holiday?',
+        grammar: '<strong>Present Simple:</strong> Das Signalwort <em>usually</em> (normalerweise) verlangt das Present Simple.',
+        sample: 'I usually go on holiday in July or August during the summer break.'
+      },
+      {
+        id: 9, row: 1, col: 0, type: 'question',
+        text: 'What do you do in winter?',
+        arrow: 'down',
+        grammar: '<strong>Present Simple:</strong> Typische Aktivitäten im Winter werden im Present Simple beschrieben.',
+        sample: 'In winter, I build a snowman, go skiing, or drink hot chocolate at home.'
+      },
+
+      // ROW 3 (Left -> Right: col 0 to col 4)
+      {
+        id: 10, row: 2, col: 0, type: 'question',
+        text: 'What is he doing?',
+        grammar: '<strong>Present Continuous:</strong> Was macht der Mann auf dem Bild gerade?',
+        sample: 'He is lying in a hammock between two palm trees and relaxing.'
+      },
+      {
+        id: 11, row: 2, col: 1, type: 'question',
+        text: 'Why is she crying?',
+        grammar: '<strong>Present Continuous:</strong> <em>She is crying because...</em> (Momentaufnahme).',
+        sample: 'She is crying because she is watching a sad movie on her computer.'
+      },
+      {
+        id: 12, row: 2, col: 2, type: 'question',
+        text: 'What does she do?',
+        grammar: '<strong>Present Simple:</strong> Diese Frage bezieht sich auf ihren Beruf oder ihre tägliche Aufgabe.',
+        sample: 'She works in an office or library and carries a huge stack of books and files.'
+      },
+      {
+        id: 13, row: 2, col: 3, type: 'question',
+        text: 'Why is she furious?',
+        grammar: '<strong>Present Simple / Continuous:</strong> Beschreibe ihren aktuellen Zustand (<em>She is furious because...</em>).',
+        sample: 'She is furious because someone broke her favourite cup / she missed the bus.'
+      },
+      {
+        id: 14, row: 2, col: 4, type: 'question',
+        text: 'Where does he live? What does he do?',
+        arrow: 'down',
+        grammar: '<strong>Present Simple:</strong> Wohnort und Beruf sind dauerhafte Zustände → <em>He lives... / He works...</em>',
+        sample: 'He lives in a big city and works as a computer programmer from home.'
+      },
+
+      // ROW 4 (Right -> Left: col 4 down to col 0)
+      {
+        id: 15, row: 3, col: 4, type: 'question',
+        text: 'Name 4 things you do every day:',
+        grammar: '<strong>Present Simple:</strong> Das Signalwort <em>every day</em> zeigt eine tägliche Routine an.',
+        sample: 'Every day, I brush my teeth, take a shower, do my homework, and check my phone.'
+      },
+      {
+        id: 16, row: 3, col: 3, type: 'question',
+        text: 'What is he frightened of?',
+        grammar: '<strong>Present Simple / Continuous:</strong> <em>He is frightened of...</em> (Wovor hat er gerade Angst?).',
+        sample: 'He is frightened of the scary horror film on TV!'
+      },
+      {
+        id: 17, row: 3, col: 2, type: 'question',
+        text: 'What do you do in autumn?',
+        grammar: '<strong>Present Simple:</strong> Gewohnheiten im Herbst stehen im Present Simple.',
+        sample: 'In autumn, I walk in the park, collect colourful leaves, and fly a kite.'
+      },
+      {
+        id: 18, row: 3, col: 1, type: 'question',
+        text: 'What is happening?',
+        grammar: '<strong>Present Continuous:</strong> Was passiert gerade auf dem Bild?',
+        sample: 'A big brown dog is barking and chasing a scared grey cat!'
+      },
+      {
+        id: 19, row: 3, col: 0, type: 'question',
+        text: 'Name 4 things you often do at home:',
+        arrow: 'down',
+        grammar: '<strong>Present Simple:</strong> Das Häufigkeitsadverb <em>often</em> steht vor dem Vollverb.',
+        sample: 'At home, I often read the newspaper, listen to music, cook dinner, and watch TV.'
+      },
+
+      // ROW 5 (Left -> Right: col 0 to col 4)
+      {
+        id: 20, row: 4, col: 0, type: 'question',
+        text: 'Name 4 things you never do on your holiday:',
+        grammar: '<strong>Present Simple:</strong> <em>never</em> (niemals) wird mit dem Present Simple verwendet.',
+        sample: 'On my holiday, I never get up early, never do homework, never clean my room, and never wear a suit.'
+      },
+      {
+        id: 21, row: 4, col: 1, type: 'question',
+        text: 'What do you do in spring?',
+        grammar: '<strong>Present Simple:</strong> Regelmäßige Aktivitäten im Frühling.',
+        sample: 'In spring, I plant flowers in the garden, ride my bike, and enjoy the warm sunshine.'
+      },
+      {
+        id: 22, row: 4, col: 2, type: 'question',
+        text: 'Are they riding on a train?',
+        grammar: '<strong>Present Continuous (Kurzantwort):</strong> <em>No, they aren’t. They are...</em>',
+        sample: 'No, they aren’t riding on a train. They are riding on an exciting roller coaster!'
+      },
+      {
+        id: 23, row: 4, col: 3, type: 'question',
+        text: 'Is she riding a bicycle?',
+        arrow: 'right',
+        grammar: '<strong>Present Continuous (Kurzantwort):</strong> <em>No, she isn’t. She is...</em>',
+        sample: 'No, she isn’t riding a bicycle. She is riding a green motor scooter!'
+      },
+      {
+        id: 24, row: 4, col: 4, type: 'finish',
+        title: 'FINISH'
+      }
+    ];
+
+    // =========================================================================
+    // 3. GAME STATE & PLAYER DEFINITIONS (RED, YELLOW, BLUE, GREEN PAWNS)
+    // =========================================================================
+    const PLAYER_PRESETS = [
+      { id: 0, name: 'Spieler 1', colorName: 'Rot', hex: '#dc2626', bgLight: 'bg-red-100', textDark: 'text-red-800', border: 'border-red-300', pos: 0 },
+      { id: 1, name: 'Spieler 2', colorName: 'Gelb', hex: '#eab308', bgLight: 'bg-amber-100', textDark: 'text-amber-800', border: 'border-amber-300', pos: 0 },
+      { id: 2, name: 'Spieler 3', colorName: 'Blau', hex: '#2563eb', bgLight: 'bg-blue-100', textDark: 'text-blue-800', border: 'border-blue-300', pos: 0 },
+      { id: 3, name: 'Spieler 4', colorName: 'Grün', hex: '#16a34a', bgLight: 'bg-emerald-100', textDark: 'text-emerald-800', border: 'border-emerald-300', pos: 0 }
+    ];
+
+    let playerCount = 4;
+    let players = JSON.parse(JSON.stringify(PLAYER_PRESETS.slice(0, playerCount)));
+    let currentTurn = 0;
+    let isRolling = false;
+    let isColorMode = false;
+
+    // 3D Dice rotation angles for numbers 1..6
+    const DICE_ROTATIONS = {
+      1: 'rotateX(0deg) rotateY(0deg)',
+      2: 'rotateX(0deg) rotateY(-90deg)',
+      3: 'rotateX(0deg) rotateY(-180deg)',
+      4: 'rotateX(0deg) rotateY(90deg)',
+      5: 'rotateX(-90deg) rotateY(0deg)',
+      6: 'rotateX(90deg) rotateY(0deg)'
+    };
+
+    // =========================================================================
+    // 4. BOARD RENDERING ENGINE
+    // =========================================================================
+    function renderBoard() {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = '';
+
+      // Build 5x5 matrix mapped by (row, col)
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const tile = BOARD_TILES.find(t => t.row === r && t.col === c);
+          const cell = document.createElement('div');
+          cell.id = `tile-${tile.id}`;
+          cell.className = 'tile-cell relative border-r-2 border-b-2 border-slate-900 min-h-[125px] sm:min-h-[155px] md:min-h-[172px] p-1.5 sm:p-2.5 flex flex-col justify-between cursor-pointer';
+          cell.onclick = () => handleTileClick(tile.id);
+
+          if (tile.type === 'start') {
+            cell.classList.add('bg-slate-50/70', 'items-center', 'justify-center');
+            cell.innerHTML = `
+              <div class="w-full h-full flex items-center justify-center p-1">
+                <svg viewBox="0 0 130 74" class="w-full max-w-[125px] h-auto" fill="none" stroke="#1c1917" stroke-width="2.6" stroke-linejoin="round">
+                  <path d="M8 22 H84 V8 L122 37 L84 66 V52 H8 Z" fill="#e2e8f0"/>
+                  <text x="53" y="43" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="18" fill="#1c1917" stroke="none" letter-spacing="1">START</text>
+                </svg>
+              </div>
+              <div id="pawns-tile-${tile.id}" class="pawn-container absolute bottom-1.5 left-1.5 flex flex-wrap gap-1 z-10"></div>
+            `;
+          } else if (tile.type === 'finish') {
+            cell.classList.add('bg-slate-50/70', 'items-center', 'justify-center');
+            cell.innerHTML = `
+              <div class="w-full h-full flex flex-col items-center justify-center text-center p-1">
+                <span class="font-extrabold text-base sm:text-xl md:text-2xl tracking-wider text-slate-900">FINISH</span>
+                <!-- Decorative Swirl Ornament matching the worksheet -->
+                <svg viewBox="0 0 120 26" class="w-20 sm:w-28 h-5 mt-1" fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round">
+                  <path d="M10 13c6-8 14-8 18 0s12 8 16 0 12-8 16 0 12 8 16 0 12-8 16 0 12 8 18 0"/>
+                  <circle cx="60" cy="13" r="2.5" fill="#1c1917"/>
+                </svg>
+              </div>
+              <div id="pawns-tile-${tile.id}" class="pawn-container absolute bottom-1.5 right-1.5 flex flex-wrap gap-1 z-10"></div>
+            `;
+          } else {
+            // Standard Question Tile
+            cell.innerHTML = `
+              <div class="flex items-start justify-between gap-1">
+                <p class="comic-font font-bold text-[10px] sm:text-xs md:text-[13px] leading-tight text-slate-900 text-center w-full">
+                  ${tile.text}
+                </p>
+              </div>
+
+              <div class="flex-1 flex items-center justify-center my-0.5 overflow-hidden">
+                <div class="w-16 h-14 sm:w-24 sm:h-20 md:w-28 md:h-24 flex items-center justify-center">
+                  ${CARTOONS[tile.id] || ''}
+                </div>
+              </div>
+
+              <!-- Pawns Container -->
+              <div id="pawns-tile-${tile.id}" class="pawn-container absolute bottom-1 left-1 flex flex-wrap gap-1 z-10"></div>
+
+              <!-- Path Direction Arrows matching the worksheet -->
+              ${tile.arrow === 'down' ? `
+                <div class="absolute -bottom-4 right-2 z-20 pointer-events-none drop-shadow-sm">
+                  <svg width="22" height="26" viewBox="0 0 24 28" fill="#1c1917">
+                    <path d="M8 0 H16 V16 H22 L12 27 L2 16 H8 Z"/>
+                  </svg>
+                </div>
+              ` : ''}
+              ${tile.arrow === 'right' ? `
+                <div class="absolute bottom-2 -right-4 z-20 pointer-events-none drop-shadow-sm">
+                  <svg width="26" height="22" viewBox="0 0 28 24" fill="#1c1917">
+                    <path d="M0 8 H16 V2 L27 12 L16 22 V16 H0 Z"/>
+                  </svg>
+                </div>
+              ` : ''}
+            `;
+          }
+
+          grid.appendChild(cell);
+        }
+      }
+
+      renderPawns();
+      renderPlayersSidebar();
+    }
+
+    // Render 3D-style Board Game Pawns on their current tiles
+    function renderPawns(animatedPlayerId = null) {
+      // Clear all pawn slots
+      BOARD_TILES.forEach(t => {
+        const container = document.getElementById(`pawns-tile-${t.id}`);
+        if (container) container.innerHTML = '';
+      });
+
+      players.forEach(p => {
+        const container = document.getElementById(`pawns-tile-${p.pos}`);
+        if (!container) return;
+
+        const pawnEl = document.createElement('div');
+        pawnEl.title = `${p.name} (${p.colorName}) – Feld ${p.pos}`;
+        pawnEl.className = `w-5 h-6 sm:w-6 sm:h-7 drop-shadow-md transition-transform ${animatedPlayerId === p.id ? 'pawn-active' : ''}`;
+        pawnEl.innerHTML = `
+          <svg viewBox="0 0 32 40" class="w-full h-full">
+            <ellipse cx="16" cy="36" rx="11" ry="3.5" fill="rgba(0,0,0,0.28)"/>
+            <path d="M7 35 C7 26, 11 22, 13 18 L19 18 C21 22, 25 26, 25 35 Z" fill="${p.hex}" stroke="#1c1917" stroke-width="2"/>
+            <circle cx="16" cy="11" r="7" fill="${p.hex}" stroke="#1c1917" stroke-width="2"/>
+            <circle cx="13.5" cy="9" r="2" fill="rgba(255,255,255,0.55)"/>
+          </svg>
+        `;
+        container.appendChild(pawnEl);
+      });
+    }
+
+    function renderPlayersSidebar() {
+      const list = document.getElementById('players-list');
+      list.innerHTML = '';
+
+      players.forEach((p, idx) => {
+        const isCurrent = idx === currentTurn;
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between px-3 py-2 rounded-xl border transition ${
+          isCurrent ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
+        }`;
+
+        const posLabel = p.pos === 0 ? 'START' : (p.pos === 24 ? 'FINISH 🏆' : `Feld ${p.pos}`);
+
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0" style="background-color: ${p.hex}"></span>
+            <span class="text-xs font-bold">${p.name} (${p.colorName})</span>
+          </div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-md ${isCurrent ? 'bg-white/15 text-white' : 'bg-white text-slate-600 border border-slate-200'}">
+            ${posLabel}
+          </span>
+        `;
+        list.appendChild(row);
+      });
+
+      // Update Turn Badge
+      const activeP = players[currentTurn];
+      const badge = document.getElementById('turn-badge');
+      badge.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${activeP.bgLight} ${activeP.textDark} border ${activeP.border}`;
+      badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full" style="background-color: ${activeP.hex}"></span> ${activeP.name} (${activeP.colorName})`;
+    }
+
+    // =========================================================================
+    // 5. DICE ROLLING & STEP-BY-STEP MOVEMENT LOGIC
+    // =========================================================================
+    function rollDice() {
+      if (isRolling) return;
+      isRolling = true;
+
+      const rollBtn = document.getElementById('roll-btn');
+      const statusText = document.getElementById('status-text');
+      const diceCube = document.getElementById('dice-cube');
+
+      rollBtn.disabled = true;
+      rollBtn.classList.add('opacity-60', 'cursor-not-allowed');
+
+      const rolled = Math.floor(Math.random() * 6) + 1;
+      statusText.textContent = 'Würfel rollt...';
+
+      // Trigger 3D spin + bounce
+      diceCube.classList.remove('dice-rolling');
+      void diceCube.offsetWidth; // Force reflow
+      diceCube.classList.add('dice-rolling');
+
+      // Add extra full 360 spins for natural roll feel
+      const extraX = 360 * (Math.floor(Math.random() * 2) + 1);
+      const extraY = 360 * (Math.floor(Math.random() * 2) + 1);
+      const baseTransform = DICE_ROTATIONS[rolled];
+      diceCube.style.transform = `rotateX(${extraX}deg) rotateY(${extraY}deg) ${baseTransform}`;
+
+      setTimeout(() => {
+        statusText.innerHTML = `<strong>${players[currentTurn].name}</strong> würfelt eine <strong>${rolled}</strong>!`;
+        movePlayerSteps(currentTurn, rolled);
+      }, 850);
+    }
+
+    function movePlayerSteps(playerIndex, steps) {
+      let remaining = steps;
+      const player = players[playerIndex];
+
+      const stepInterval = setInterval(() => {
+        if (remaining > 0 && player.pos < 24) {
+          player.pos += 1;
+          remaining -= 1;
+          renderPawns(player.id);
+          renderPlayersSidebar();
+          highlightTile(player.pos);
+        } else {
+          clearInterval(stepInterval);
+
+          // Check Finish
+          if (player.pos >= 24) {
+            player.pos = 24;
+            renderPawns(player.id);
+            renderPlayersSidebar();
+            document.getElementById('winner-text').textContent = `${player.name} (${player.colorName}) hat FINISH erreicht und das Spiel gewonnen!`;
+            document.getElementById('winner-modal').classList.remove('hidden');
+            document.getElementById('winner-modal').classList.add('flex');
+          } else {
+            // Open question modal for the landed field
+            openQuestionModal(player.pos, `${player.name} (${player.colorName}) ist auf Feld ${player.pos} gelandet`);
+          }
+
+          // Advance turn to next player
+          currentTurn = (currentTurn + 1) % players.length;
+          renderPlayersSidebar();
+
+          // Re-enable Roll button
+          isRolling = false;
+          const rollBtn = document.getElementById('roll-btn');
+          rollBtn.disabled = false;
+          rollBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+          document.getElementById('status-text').textContent = `${players[currentTurn].name} (${players[currentTurn].colorName}) ist dran!`;
+        }
+      }, 280);
+    }
+
+    function highlightTile(tileId) {
+      document.querySelectorAll('.tile-cell').forEach(el => el.classList.remove('tile-highlight'));
+      const activeTile = document.getElementById(`tile-${tileId}`);
+      if (activeTile) {
+        activeTile.classList.add('tile-highlight');
+      }
+    }
+
+    // =========================================================================
+    // 6. INTERACTIVE MODALS & GAME CONTROLS
+    // =========================================================================
+    function handleTileClick(tileId) {
+      const tile = BOARD_TILES.find(t => t.id === tileId);
+      if (!tile) return;
+      highlightTile(tileId);
+
+      if (tile.type === 'question') {
+        openQuestionModal(tileId, 'Feld-Vorschau & Übung');
+      }
+    }
+
+    function openQuestionModal(tileId, subtitle) {
+      const tile = BOARD_TILES.find(t => t.id === tileId);
+      if (!tile || tile.type !== 'question') return;
+
+      document.getElementById('modal-field-badge').textContent = `Feld ${tile.id}`;
+      document.getElementById('modal-player-tag').textContent = subtitle;
+      document.getElementById('modal-question').textContent = tile.text;
+      document.getElementById('modal-illustration').innerHTML = CARTOONS[tile.id] || '';
+      document.getElementById('hint-grammar').innerHTML = tile.grammar;
+      document.getElementById('hint-sample').innerHTML = `<strong>Beispielantwort:</strong><br/><em>"${tile.sample}"</em>`;
+
+      // Hide hints initially so students try speaking first
+      document.getElementById('hint-grammar').classList.add('hidden');
+      document.getElementById('hint-sample').classList.add('hidden');
+
+      const modal = document.getElementById('question-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeQuestionModal() {
+      const modal = document.getElementById('question-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleHint(type) {
+      const el = document.getElementById(`hint-${type}`);
+      el.classList.toggle('hidden');
+    }
+
+    function closeWinnerModal() {
+      const modal = document.getElementById('winner-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openRulesModal() {
+      const modal = document.getElementById('rules-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRulesModal() {
+      const modal = document.getElementById('rules-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setPlayerCount(count) {
+      playerCount = count;
+      [2, 3, 4].forEach(n => {
+        const btn = document.getElementById(`btn-p${n}`);
+        if (n === count) {
+          btn.className = 'player-cnt-btn px-2.5 py-1 text-xs font-bold rounded-lg transition bg-slate-900 text-white';
+        } else {
+          btn.className = 'player-cnt-btn px-2.5 py-1 text-xs font-bold rounded-lg transition text-slate-700 hover:bg-slate-200';
+        }
+      });
+      resetGame();
+    }
+
+    function toggleColorMode() {
+      isColorMode = !isColorMode;
+      const body = document.body;
+      const label = document.getElementById('style-label');
+      const icon = document.getElementById('style-icon');
+
+      if (isColorMode) {
+        body.classList.remove('bw-mode');
+        body.classList.add('color-mode');
+        label.textContent = 'S/W-Arbeitsblatt';
+        icon.textContent = '📄';
+      } else {
+        body.classList.remove('color-mode');
+        body.classList.add('bw-mode');
+        label.textContent = 'Comic-Farbe';
+        icon.textContent = '🖍️';
+      }
+    }
+
+    function resetGame() {
+      if (isRolling) return;
+      players = JSON.parse(JSON.stringify(PLAYER_PRESETS.slice(0, playerCount)));
+      currentTurn = 0;
+      document.querySelectorAll('.tile-cell').forEach(el => el.classList.remove('tile-highlight'));
+      document.getElementById('status-text').textContent = 'Neues Spiel! Spieler 1 (Rot) beginnt.';
+      renderPawns();
+      renderPlayersSidebar();
+    }
+
+    // Initialize game on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderBoard();
+    });
+  </script>
+</body>
+</html>
